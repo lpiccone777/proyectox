@@ -1,0 +1,35 @@
+{
+  "name": "deposito-urbano-compartido",
+  "version": "1.0.0",
+  "description": "Plataforma colaborativa de micro-almacenaje para el mercado argentino",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "ios",
+    "android"
+  ],
+  "scripts": {
+    "backend": "npm run start --workspace=backend",
+    "backend:dev": "npm run dev --workspace=backend",
+    "backend:test": "npm run test --workspace=backend",
+    "backend:build": "npm run build --workspace=backend",
+    "ios:build": "cd ios && xcodebuild",
+    "android:build": "cd android && ./gradlew assembleDebug",
+    "test": "npm run test --workspaces",
+    "lint": "npm run lint --workspaces"
+  },
+  "keywords": [
+    "storage",
+    "collaborative",
+    "monorepo",
+    "nodejs",
+    "ios",
+    "android"
+  ],
+  "author": "Deposito Urbano Team",
+  "license": "MIT",
+  "engines": {
+    "node": ">=18.0.0",
+    "npm": ">=8.0.0"
+  }
+}

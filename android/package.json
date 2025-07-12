@@ -1,0 +1,11 @@
+{
+  "name": "deposito-urbano-android",
+  "version": "1.0.0",
+  "description": "Android native app for Deposito Urbano",
+  "scripts": {
+    "android": "cd /Users/lpiccone/Documents/GitHub/proyectoX/android && ./gradlew assembleDebug",
+    "android:clean": "cd /Users/lpiccone/Documents/GitHub/proyectoX/android && ./gradlew clean",
+    "android:build": "cd /Users/lpiccone/Documents/GitHub/proyectoX/android && ./gradlew assembleRelease",
+    "android:test": "cd /Users/lpiccone/Documents/GitHub/proyectoX/android && ./gradlew test"
+  }
+}

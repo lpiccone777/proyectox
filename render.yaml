@@ -1,0 +1,62 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: deposito-urbano-db
+    env: docker
+    plan: starter
+    dockerfilePath: ./postgres/Dockerfile
+    dockerContext: ./postgres
+    envVars:
+      - key: POSTGRES_USER
+        value: deposito_user
+      - key: POSTGRES_PASSWORD
+        generateValue: true
+      - key: POSTGRES_DB
+        value: deposito_urbano
+    disk:
+      name: postgres-data
+      mountPath: /var/lib/postgresql/data
+      sizeGB: 10
+
+  # Backend API
+  - type: web
+    name: deposito-urbano-api
+    env: docker
+    plan: starter
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        fromService:
+          type: pserv
+          name: deposito-urbano-db
+          property: host
+      - key: DB_PORT
+        fromService:
+          type: pserv
+          name: deposito-urbano-db
+          property: port
+      - key: DB_NAME
+        value: deposito_urbano
+      - key: DB_USER
+        value: deposito_user
+      - key: DB_PASSWORD
+        fromService:
+          type: pserv
+          name: deposito-urbano-db
+          envVarKey: POSTGRES_PASSWORD
+      - key: JWT_SECRET
+        generateValue: true
+      - key: MERCADOPAGO_ACCESS_TOKEN
+        sync: false
+      - key: FRONTEND_URL
+        value: https://depositourbano.com
+    healthCheckPath: /api/health
+    disk:
+      name: uploads
+      mountPath: /app/uploads
+      sizeGB: 5

@@ -1,0 +1,9 @@
+{
+  "name": "deposito-urbano-ios",
+  "version": "1.0.0",
+  "description": "iOS native app for Deposito Urbano",
+  "scripts": {
+    "ios": "cd /Users/lpiccone/Documents/GitHub/proyectoX/ios && xcodebuild -project DepositoUrbano.xcodeproj -scheme DepositoUrbano -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14' build",
+    "test": "cd /Users/lpiccone/Documents/GitHub/proyectoX/ios && xcodebuild test -project DepositoUrbano.xcodeproj -scheme DepositoUrbanoTests -sdk iphonesimulator -destination 'platform=iOS Simulator,name=iPhone 14'"
+  }
+}
