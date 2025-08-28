@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 export type ToastType = 'success' | 'error' | 'warning' | 'info';
 
@@ -7,16 +7,27 @@ interface ToastProps {
   type: ToastType;
   onClose: () => void;
   duration?: number;
+  index?: number;
 }
 
-const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3000 }) => {
+const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 1500, index = 0 }) => {
+  const [isLeaving, setIsLeaving] = useState(false);
+
+  const handleClose = () => {
+    setIsLeaving(true);
+    setTimeout(() => {
+      onClose();
+    }, 300); // Wait for exit animation to complete
+  };
+
   useEffect(() => {
     const timer = setTimeout(() => {
-      onClose();
+      handleClose();
     }, duration);
 
     return () => clearTimeout(timer);
-  }, [duration, onClose]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [duration]);
 
   const getBackgroundColor = () => {
     switch (type) {
@@ -51,27 +62,29 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3000 }
   return (
     <div
       style={{
-        position: 'fixed',
-        top: '20px',
-        right: '20px',
+        position: 'relative',
         backgroundColor: getBackgroundColor(),
         color: 'white',
         padding: '16px 24px',
-        borderRadius: '8px',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+        borderRadius: '12px',
+        boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
         display: 'flex',
         alignItems: 'center',
         gap: '12px',
-        minWidth: '300px',
-        maxWidth: '500px',
-        zIndex: 9999,
-        animation: 'slideIn 0.3s ease-out',
+        minWidth: '320px',
+        maxWidth: '420px',
+        transform: isLeaving ? 'translateX(100%) scale(0.95)' : 'translateX(0) scale(1)',
+        opacity: isLeaving ? 0 : 1,
+        transition: 'all 0.3s cubic-bezier(0.4, 0.0, 0.2, 1)',
+        animation: !isLeaving ? 'slideIn 0.4s cubic-bezier(0.34, 1.56, 0.64, 1)' : 'none',
+        pointerEvents: 'auto',
+        backdropFilter: 'blur(8px)',
       }}
     >
       <span style={{ fontSize: '1.5rem' }}>{getIcon()}</span>
       <span style={{ flex: 1 }}>{message}</span>
       <button
-        onClick={onClose}
+        onClick={handleClose}
         style={{
           background: 'none',
           border: 'none',
@@ -89,12 +102,16 @@ const Toast: React.FC<ToastProps> = ({ message, type, onClose, duration = 3000 }
       <style>
         {`
           @keyframes slideIn {
-            from {
-              transform: translateX(100%);
+            0% {
+              transform: translateX(100%) scale(0.9);
               opacity: 0;
             }
-            to {
-              transform: translateX(0);
+            70% {
+              transform: translateX(-8px) scale(1.02);
+              opacity: 0.8;
+            }
+            100% {
+              transform: translateX(0) scale(1);
               opacity: 1;
             }
           }

@@ -11,6 +11,8 @@ const CreateSpaceModal: React.FC<CreateSpaceModalProps> = ({ onClose, onSuccess 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const toast = useToast();
+  const [selectedImages, setSelectedImages] = useState<File[]>([]);
+  const [imagePreviews, setImagePreviews] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -78,6 +80,44 @@ const CreateSpaceModal: React.FC<CreateSpaceModalProps> = ({ onClose, onSuccess 
     }));
   };
 
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files;
+    if (files) {
+      const fileArray = Array.from(files);
+      
+      // Límite de 10 imágenes
+      if (fileArray.length + selectedImages.length > 10) {
+        setError('Máximo 10 imágenes permitidas');
+        return;
+      }
+
+      // Validar tamaño de archivo (máx 5MB por imagen)
+      const validFiles = fileArray.filter(file => {
+        if (file.size > 5 * 1024 * 1024) {
+          setError(`${file.name} es muy grande. Máximo 5MB por imagen.`);
+          return false;
+        }
+        return true;
+      });
+
+      setSelectedImages(prev => [...prev, ...validFiles]);
+
+      // Crear previews
+      validFiles.forEach(file => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setImagePreviews(prev => [...prev, reader.result as string]);
+        };
+        reader.readAsDataURL(file);
+      });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    setSelectedImages(prev => prev.filter((_, i) => i !== index));
+    setImagePreviews(prev => prev.filter((_, i) => i !== index));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -104,7 +144,21 @@ const CreateSpaceModal: React.FC<CreateSpaceModalProps> = ({ onClose, onSuccess 
         maxBookingDays: formData.maxBookingDays ? parseInt(formData.maxBookingDays) : null
       };
 
-      await spacesAPI.create(dataToSend);
+      // Primero crear el espacio
+      const response = await spacesAPI.create(dataToSend);
+      const spaceId = response.data.id;
+
+      // Si hay imágenes seleccionadas, subirlas
+      if (selectedImages.length > 0) {
+        const formData = new FormData();
+        selectedImages.forEach(image => {
+          formData.append('images', image);
+        });
+
+        await spacesAPI.uploadImages(spaceId, formData);
+      }
+
+      toast.success('Espacio creado exitosamente');
       onSuccess();
       onClose();
     } catch (err: any) {
@@ -189,6 +243,79 @@ const CreateSpaceModal: React.FC<CreateSpaceModalProps> = ({ onClose, onSuccess 
                 border: '1px solid #ddd'
               }}
             />
+          </div>
+
+          <div style={{ marginBottom: '20px' }}>
+            <label style={{ display: 'block', marginBottom: '10px', fontWeight: 'bold' }}>
+              Imágenes del espacio (máximo 10)
+            </label>
+            <input
+              type="file"
+              multiple
+              accept="image/*"
+              onChange={handleImageChange}
+              style={{
+                marginBottom: '10px',
+                width: '100%',
+                padding: '10px',
+                border: '1px solid #ddd',
+                borderRadius: '4px'
+              }}
+            />
+            {imagePreviews.length > 0 && (
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fill, minmax(100px, 1fr))',
+                gap: '10px',
+                marginTop: '10px'
+              }}>
+                {imagePreviews.map((preview, index) => (
+                  <div key={index} style={{
+                    position: 'relative',
+                    paddingBottom: '100%',
+                    backgroundColor: '#f5f5f5',
+                    borderRadius: '4px',
+                    overflow: 'hidden'
+                  }}>
+                    <img
+                      src={preview}
+                      alt={`Preview ${index + 1}`}
+                      style={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        width: '100%',
+                        height: '100%',
+                        objectFit: 'cover'
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => removeImage(index)}
+                      style={{
+                        position: 'absolute',
+                        top: '5px',
+                        right: '5px',
+                        backgroundColor: 'rgba(255, 255, 255, 0.9)',
+                        border: 'none',
+                        borderRadius: '50%',
+                        width: '24px',
+                        height: '24px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        fontSize: '16px',
+                        fontWeight: 'bold',
+                        color: '#666'
+                      }}
+                    >
+                      ×
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )}
           </div>
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '20px', marginBottom: '20px' }}>

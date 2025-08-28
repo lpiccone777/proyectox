@@ -1,6 +1,6 @@
 import axios from 'axios';
 
-const API_BASE_URL = 'http://localhost:3000/api/v1';
+const API_BASE_URL = 'http://localhost:5001/api/v1';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,12 +9,26 @@ const api = axios.create({
   },
 });
 
-// Add auth token to requests
+// Add auth token and user ID to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token');
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  
+  // Temporary: add user ID to headers for routes without auth
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user?.id) {
+        config.headers['x-user-id'] = user.id;
+      }
+    } catch (e) {
+      // Ignore parse errors
+    }
+  }
+  
   return config;
 });
 
@@ -28,6 +42,12 @@ export const authAPI = {
   
   getMe: () =>
     api.get('/auth/me'),
+  
+  googleLogin: (credential: string) =>
+    api.post('/auth/google', { credential }),
+  
+  appleLogin: (idToken: string) =>
+    api.post('/auth/apple', { idToken }),
 };
 
 // Spaces API
@@ -49,6 +69,16 @@ export const spacesAPI = {
   
   delete: (id: number) =>
     api.delete(`/spaces/${id}`),
+  
+  uploadImages: (spaceId: number, formData: FormData) =>
+    api.post(`/spaces/${spaceId}/images`, formData, {
+      headers: {
+        'Content-Type': 'multipart/form-data',
+      },
+    }),
+  
+  deleteImage: (spaceId: number, imageId: number) =>
+    api.delete(`/spaces/${spaceId}/images/${imageId}`),
 };
 
 // Bookings API
