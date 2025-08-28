@@ -46,9 +46,11 @@ export const loginValidator = [
 ];
 
 export const googleAuthValidator = [
-  body('idToken')
+  body('credential')
     .notEmpty()
-    .withMessage('ID token is required')
+    .withMessage('Google credential is required')
+    .isString()
+    .withMessage('Credential must be a string')
 ];
 
 export const appleAuthValidator = [

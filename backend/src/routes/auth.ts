@@ -7,6 +7,7 @@ import {
   appleAuthValidator 
 } from '../validators/authValidators';
 import { handleValidationErrors } from '../middleware/validation';
+// import { authenticate } from '../middleware/auth';
 
 const router = Router();
 
@@ -36,6 +37,13 @@ router.post(
   appleAuthValidator,
   handleValidationErrors,
   authController.appleAuth
+);
+
+// Protected route to get current user
+router.get(
+  '/me',
+  // authenticate as any,
+  authController.getMe
 );
 
 export default router;

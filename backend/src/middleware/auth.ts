@@ -8,11 +8,11 @@ export interface AuthRequest extends Request {
   user?: UserInstance;
 }
 
-export const authenticate = async (
+export const authenticate = (
   req: AuthRequest,
   _res: Response,
   next: NextFunction
-): Promise<void> => {
+): void => {
   try {
     const token = req.headers.authorization?.split(' ')[1];
     
@@ -23,14 +23,16 @@ export const authenticate = async (
     const decoded = jwt.verify(token, config.jwt.secret) as { userId: number };
     
     const { User } = req.app.locals.db;
-    const user = await User.findByPk(decoded.userId);
-    
-    if (!user) {
-      throw new AuthenticationError('User not found');
-    }
-
-    req.user = user;
-    next();
+    User.findByPk(decoded.userId).then((user: UserInstance | null) => {
+      if (!user) {
+        next(new AuthenticationError('User not found'));
+        return;
+      }
+      req.user = user;
+      next();
+    }).catch((error: any) => {
+      next(error);
+    });
   } catch (error) {
     next(error);
   }

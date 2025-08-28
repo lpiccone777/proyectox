@@ -15,8 +15,23 @@ const app = express();
 // Security middleware
 app.use(helmet());
 app.use(cors({
-  origin: config.cors.frontendUrl,
-  credentials: true
+  origin: function(origin, callback) {
+    // Allow requests with no origin (like mobile apps or Postman)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = Array.isArray(config.cors.frontendUrl) 
+      ? config.cors.frontendUrl 
+      : [config.cors.frontendUrl];
+    
+    if (allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 // Rate limiting
